@@ -1,0 +1,38 @@
+version: "1.0"
+
+volumes:
+      invoice-control-data:
+
+networks:
+        backend:
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      SA_PASSWORD: "_dev$SqlServer2022!"
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Developer"
+    ports:
+      - "1433:1433"
+  mssqltools:
+    image: mcr.microsoft.com/mssql-tools
+    depends_on:
+      - sqlserver
+    volumes:
+      - ./init.sql:/tmp/init.sql      
+      - ./init.sh:/tmp/init.sh
+    command: /bin/bash ./tmp/init.sh
+    networks:
+              - backend
+  webapi:
+          build:
+            context: .
+            dockerfile: Dockerfile      
+          networks:
+            - backend            
+          ports:
+            - 5000:80          
+          depends_on:
+            - sqlserver
+       
